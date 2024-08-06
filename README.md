@@ -12,7 +12,7 @@ This repository is a collection of useful utilities designed to simplify develop
 - Color conversion into various luminance levels.
 - Generation of HSL and Hex values for base colors and their luminance variations.
 
-### 2. Form Styles (`form.css`)
+### 2. Form Styles
 
 `form.css` offers custom styles for HTML form elements, such as checkboxes and radio buttons, to enhance their appearance and consistency.
 

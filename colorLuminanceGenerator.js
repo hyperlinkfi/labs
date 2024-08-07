@@ -14,20 +14,30 @@ const colors = {
   black: { hex: "#000000", generateLuminance: false },
 };
 
-// Target luminance levels
+// Kohdeluminanssit tasoille
 const luminanceLevels = {
-  1: 240,
-  2: 220,
-  3: 170,
-  4: 120,
-  5: 80,
-  6: 50,
-  7: 20,
-  8: 5,
-  9: 2,
+  50: 250,
+  100: 240,
+  150: 220,
+  200: 200,
+  250: 170,
+  300: 145,
+  350: 123,
+  400: 100,
+  450: 82,
+  500: 65,
+  550: 50,
+  600: 37,
+  650: 27,
+  700: 19,
+  750: 12,
+  800: 7,
+  850: 4,
+  900: 2,
+  950: 1,
 };
 
-// Create color variations
+// Luodaan väriversiot
 const createColorVariations = (
   baseColor: string,
   luminanceLevels: { [key: number]: number }
@@ -50,7 +60,7 @@ let luminanceHex: string[] = [];
 let luminanceHsl: string[] = [];
 
 Object.entries(colors).forEach(([name, { hex, generateLuminance }]) => {
-  // Add base colors
+  // Lisää perusvärit
   baseHex.push(`--${name}: ${hex};`);
   const [h, s, l] = chroma(hex)
     .hsl()
@@ -58,7 +68,7 @@ Object.entries(colors).forEach(([name, { hex, generateLuminance }]) => {
   baseHsl.push(`--${name}-hsl: ${isNaN(h) ? 0 : h}, ${isNaN(s) ? 0 : s}%, ${l}%;`);
 
   if (generateLuminance) {
-    // Add luminance variations
+    // Lisää luminanssiversiot
     const variations = createColorVariations(hex, luminanceLevels);
     variations.forEach(({ level, color }) => {
       luminanceHex.push(`--${name}-${level}: ${color};`);
@@ -72,7 +82,7 @@ Object.entries(colors).forEach(([name, { hex, generateLuminance }]) => {
   }
 });
 
-// Print results in the correct format
+// Tulosta tulokset oikeassa muodossa
 console.log(
   [
     ":root {",

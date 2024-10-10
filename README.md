@@ -1,4 +1,4 @@
-# Utils Repository
+# Labs Repository
 
 This repository is a collection of useful utilities designed to simplify development tasks across various projects. The repository will grow over time with new utilities added as needed, encompassing a range of programming languages and styles.
 

@@ -53,7 +53,7 @@
   <div class="palette" id="palette"></div>
 
   <label for="css-output">CSS Variables:</label>
-  <textarea id="css-output" rows="10" style="width: 500px;"></textarea>
+  <textarea id="css-output" rows="10"></textarea>
 
   <script>
     function generatePalette() {
@@ -100,7 +100,8 @@
         const lightness = lightnessValues[key];
         const color = chroma.hsl(hue, saturation, lightness);
         const hexColor = color.hex(); // HEX-muoto
-        const hslColor = color.css('hsl'); // HSL-muoto
+        const [h, s, l] = color.hsl(); // HSL arvot taulukkona
+        const hslColor = `${Math.round(h)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`; // HSL-muoto ilman "hsl()"
 
         // Luo värilaatikot
         const colorBox = document.createElement('div');

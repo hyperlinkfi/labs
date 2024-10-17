@@ -1,17 +1,13 @@
 import chroma from "chroma-js";
 
 const colors = {
-  red: { hex: "#71002e", generateLuminance: true },
-  green: { hex: "#066839", generateLuminance: true },
-  blue: { hex: "#125476", generateLuminance: true },
-  orange: { hex: "#b4521f", generateLuminance: true },
-  cream: { hex: "#ffeaca", generateLuminance: true },
-  gray: { hex: "#44413e", generateLuminance: true },
-  danger: { hex: "#cc0000", generateLuminance: false },
-  success: { hex: "#38a33d", generateLuminance: false },
-  warning: { hex: "#cc8800", generateLuminance: false },
+  indigo: { hex: "#4d09b9", generateLuminance: true },
+  gray: { hex: "#8c8497", generateLuminance: true },
+  danger: { hex: "#cc0000", generateLuminance: true },
+  success: { hex: "#38a33d", generateLuminance: true },
+  warning: { hex: "#cc8800", generateLuminance: true },
   white: { hex: "#ffffff", generateLuminance: false },
-  black: { hex: "#000000", generateLuminance: false },
+  black: { hex: "#05010c", generateLuminance: false },
 };
 
 // Kohdeluminanssit tasoille
@@ -65,7 +61,7 @@ Object.entries(colors).forEach(([name, { hex, generateLuminance }]) => {
   const [h, s, l] = chroma(hex)
     .hsl()
     .map((x, i) => (i === 0 ? Math.round(x) : Math.round(x * 100)));
-  baseHsl.push(`--${name}-hsl: ${isNaN(h) ? 0 : h}, ${isNaN(s) ? 0 : s}%, ${l}%;`);
+  baseHsl.push(`--${name}-hsl: ${isNaN(h) ? 0 : h} ${isNaN(s) ? 0 : s}% ${l}%;`);
 
   if (generateLuminance) {
     // Lisää luminanssiversiot
@@ -76,7 +72,7 @@ Object.entries(colors).forEach(([name, { hex, generateLuminance }]) => {
         .hsl()
         .map((x, i) => (i === 0 ? Math.round(x) : Math.round(x * 100)));
       luminanceHsl.push(
-        `--${name}-${level}-hsl: ${isNaN(h) ? 0 : h}, ${isNaN(s) ? 0 : s}%, ${l}%;`
+        `--${name}-${level}-hsl: ${isNaN(h) ? 0 : h} ${isNaN(s) ? 0 : s}% ${l}%;`
       );
     });
   }

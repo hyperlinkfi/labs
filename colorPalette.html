@@ -8,7 +8,7 @@
       body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         padding: 20px;
-        background-color: #f0f4f8;
+        background-color: #fff;
         color: #333;
       }
       h1 {
@@ -38,12 +38,12 @@
         display: flex;
         gap: 2px;
         justify-content: space-between;
-        flex-wrap: nowrap; /* Estää wrapin */
+        flex-wrap: nowrap;
         flex-grow: 1;
       }
       .color-box {
         height: 50px;
-        flex-grow: 1; /* Laatikot skaalautuvat tilan mukaan */
+        flex-grow: 1;
         display: inline-block;
         text-align: center;
         line-height: 50px;
@@ -72,11 +72,6 @@
         font-size: 0.9rem;
         color: #666;
       }
-      .hex-preview-container {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
       .preview-box {
         width: 50px;
         height: 50px;
@@ -92,206 +87,190 @@
         transition: background-color 0.3s ease;
       }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.0/chroma.min.js"></script>
   </head>
   <body>
-    <h1>Hypercolor</h1>
+    <div id="app">
+      <h1>Hypercolor</h1>
 
-    <div class="slider-container">
-      <label for="name">Palette Name:</label>
-      <input type="text" id="name" oninput="generatePalette()" />
-    </div>
-
-    <div class="hex-preview-container">
       <div class="slider-container">
         <label for="hex">Enter HEX Color:</label>
-        <input type="text" id="hex" onkeypress="handleHexInput(event)" />
+        <input
+          type="text"
+          v-model="hex"
+          @keypress.enter="setHueAndSaturationFromHex"
+        />
       </div>
-      <!-- Smaller live preview next to HEX input -->
-      <div class="preview-box" id="preview-box"></div>
+
+      <div class="slider-container">
+        <label for="hue">Hue:</label>
+        <input type="range" v-model.number="hue" min="0" max="360" />
+        <span>{{ hue }}%</span>
+      </div>
+
+      <div class="slider-container">
+        <label for="saturation">Saturation:</label>
+        <input
+          type="range"
+          v-model.number="saturation"
+          min="0"
+          max="1"
+          step="0.01"
+        />
+        <span>{{ Math.round(saturation * 100) }}%</span>
+      </div>
+
+      <div class="slider-container">
+        <label for="lightness-light">Lightest Lightness:</label>
+        <input
+          type="range"
+          v-model.number="lightestLightness"
+          min="0.5"
+          max="0.99"
+          step="0.01"
+        />
+        <span>{{ Math.round(lightestLightness * 100) }}%</span>
+      </div>
+
+      <div class="slider-container">
+        <label for="lightness-dark">Darkest Lightness:</label>
+        <input
+          type="range"
+          v-model.number="darkestLightness"
+          min="0.01"
+          max="0.5"
+          step="0.01"
+        />
+        <span>{{ Math.round(darkestLightness * 100) }}%</span>
+      </div>
+
+      <div class="palette">
+        <div
+          v-for="(hsl, key) in palette"
+          :key="key"
+          class="color-box"
+          :style="{ backgroundColor: `hsl(${hsl})` }"
+          :title="`${key} - ${hsl}`"
+        ></div>
+      </div>
+
+      <div class="slider-container">
+        <label for="name">Palette Name:</label>
+        <input type="text" v-model="paletteName" />
+      </div>
+
+      <label for="css-output">CSS Variables:</label>
+      <textarea v-model="cssOutput"></textarea>
     </div>
-
-    <div class="slider-container">
-      <label for="hue">Hue:</label>
-      <input
-        type="range"
-        id="hue"
-        min="0"
-        max="360"
-        value="200"
-        oninput="generatePalette()"
-      />
-      <span id="hue-value">200</span>
-    </div>
-
-    <div class="slider-container">
-      <label for="saturation">Saturation:</label>
-      <input
-        type="range"
-        id="saturation"
-        min="0"
-        max="1"
-        step="0.01"
-        value="0.75"
-        oninput="generatePalette()"
-      />
-      <span id="saturation-value">0.75</span>
-    </div>
-
-    <div class="slider-container">
-      <label for="lightness-light">Lightest Lightness:</label>
-      <input
-        type="range"
-        id="lightness-light"
-        min="0.5"
-        max="1"
-        step="0.01"
-        value="0.97"
-        oninput="generatePalette()"
-      />
-      <span id="lightness-light-value">0.97</span>
-    </div>
-
-    <div class="slider-container">
-      <label for="lightness-dark">Darkest Lightness:</label>
-      <input
-        type="range"
-        id="lightness-dark"
-        min="0"
-        max="0.5"
-        step="0.01"
-        value="0.05"
-        oninput="generatePalette()"
-      />
-      <span id="lightness-dark-value">0.05</span>
-    </div>
-
-    <div class="palette" id="palette"></div>
-
-    <label for="css-output">CSS Variables:</label>
-    <textarea id="css-output"></textarea>
 
     <script>
-      function generatePalette() {
-        const hue = parseInt(document.getElementById("hue").value);
-        const saturation = parseFloat(
-          document.getElementById("saturation").value
-        );
-        const lightestLightness = parseFloat(
-          document.getElementById("lightness-light").value
-        );
-        const darkestLightness = parseFloat(
-          document.getElementById("lightness-dark").value
-        );
-        const paletteName = document.getElementById("name").value || "color";
+      const { createApp, ref, computed } = Vue;
 
-        // Päivitetään näyttöön nykyiset arvot prosentteina
-        document.getElementById("hue-value").textContent = `${hue}%`;
-        document.getElementById("saturation-value").textContent = `${Math.round(
-          saturation * 100
-        )}%`;
-        document.getElementById(
-          "lightness-light-value"
-        ).textContent = `${Math.round(lightestLightness * 100)}%`;
-        document.getElementById(
-          "lightness-dark-value"
-        ).textContent = `${Math.round(darkestLightness * 100)}%`;
+      createApp({
+        setup() {
+          const paletteName = ref("primary");
+          const hue = ref(200);
+          const saturation = ref(0.75);
+          const lightestLightness = ref(0.98);
+          const darkestLightness = ref(0.07);
+          const hex = ref("#00aaff");
+          const cssOutput = ref("");
 
-        const paletteDiv = document.getElementById("palette");
-        paletteDiv.innerHTML = ""; // Tyhjennä aiempi sisältö
+          const palette = computed(() => {
+            // Original lightness values array with keys
+            const originalLightnessValues = [
+              { key: 50, value: 100 },
+              { key: 100, value: 94.44 },
+              { key: 150, value: 88.89 },
+              { key: 200, value: 83.33 },
+              { key: 250, value: 77.78 },
+              { key: 300, value: 72.22 },
+              { key: 350, value: 66.67 },
+              { key: 400, value: 61.11 },
+              { key: 450, value: 55.56 },
+              { key: 500, value: 50 },
+              { key: 550, value: 44.44 },
+              { key: 600, value: 38.89 },
+              { key: 650, value: 33.33 },
+              { key: 700, value: 27.78 },
+              { key: 750, value: 22.22 },
+              { key: 800, value: 16.67 },
+              { key: 850, value: 11.11 },
+              { key: 900, value: 5.56 },
+              { key: 950, value: 0 },
+            ];
 
-        // Päivitä esikatselu ja HEX-kenttä, mutta älä muuta sen arvoa
-        const previewBox = document.getElementById("preview-box");
-        const previewColor = chroma
-          .hsl(hue, saturation, (lightestLightness + darkestLightness) / 2)
-          .hex();
-        previewBox.style.backgroundColor = previewColor;
+            // Skaalauskerroin
+            const scaleFactor =
+              (lightestLightness.value - darkestLightness.value) / 100;
 
-        const cssOutput = document.getElementById("css-output");
-        let cssVarsHsl = ""; // CSS HSL väreille
+            // Lasketaan värit ja lightness-arvot käyttäen map-funktiota
+            const palette = originalLightnessValues.map(({ key, value }) => {
+              const scaledLightness =
+                darkestLightness.value + value * scaleFactor;
 
-        // Kiinteät lightness-arvot, jotka skaalataan valittujen arvojen mukaan
-        const originalLightnessValues = {
-          50: 0.97,
-          100: 0.94,
-          150: 0.9,
-          200: 0.84,
-          250: 0.77,
-          300: 0.72,
-          350: 0.67,
-          400: 0.62,
-          450: 0.57,
-          500: 0.52,
-          550: 0.46,
-          600: 0.41,
-          650: 0.34,
-          700: 0.28,
-          750: 0.22,
-          800: 0.14,
-          850: 0.11,
-          900: 0.08,
-          950: 0.05,
-        };
+              const hslColor = chroma.hsl(
+                hue.value,
+                saturation.value,
+                scaledLightness
+              );
 
-        // Skaalaus lightness-arvoille
-        const scaleFactor =
-          (lightestLightness - darkestLightness) / (0.97 - 0.05);
-        const scaledLightnessValues = {};
-        Object.keys(originalLightnessValues).forEach((key) => {
-          scaledLightnessValues[key] =
-            darkestLightness +
-            (originalLightnessValues[key] - 0.05) * scaleFactor;
-        });
+              const labColor = hslColor.lab();
 
-        // Luo väripaletin käyttäen HSL-mallia
-        Object.keys(scaledLightnessValues).forEach((key) => {
-          const lightness = scaledLightnessValues[key];
-          const color = chroma.hsl(hue, saturation, lightness);
-          const hexColor = color.hex();
-          const [h, s, l] = color.hsl();
-          const hslColor = `${Math.round(h) || 0} ${Math.round(
-            s * 100
-          )}% ${Math.round(l * 100)}%`;
+              const adjustedLabLuminance = Math.min(
+                labColor[0],
+                lightestLightness.value * 100
+              );
 
-          // Luo värilaatikot
-          const colorBox = document.createElement("div");
-          colorBox.className = "color-box";
-          colorBox.style.backgroundColor = hexColor;
-          colorBox.title = `${key} - ${hexColor}`; // Tooltip näyttää numeron ja värikoodin
-          paletteDiv.appendChild(colorBox);
+              const adjustedLight = chroma
+                .lab(adjustedLabLuminance, labColor[1], labColor[2])
+                .hsl()[2];
 
-          // Lisää värin CSS-muuttuja
-          cssVarsHsl += `--${paletteName}-${key}: ${hslColor};\n`;
-        });
+              return {
+                key,
+                hsl: `${hue.value} ${(
+                  saturation.value * 100
+                ).toFixed(0)}% ${(adjustedLight * 100).toFixed(1)}%`,
+              };
+            });
 
-        // Päivitetään CSS-muuttujat textarea-kenttään
-        cssOutput.value = cssVarsHsl;
-      }
+            // Päivitetään CSS-muuttujat textarea-kenttään
+            cssOutput.value = palette
+              .map(
+                (color) => `--${paletteName.value}-${color.key}: ${color.hsl};`
+              )
+              .join("\n");
 
-      // Määritetään hue ja saturation HEX-värin perusteella, mutta HEX-arvo säilyy muuttumattomana
-      function setHueAndSaturationFromHex() {
-        const hex = document.getElementById("hex").value;
-        try {
-          const hsl = chroma(hex).hsl();
-          const [hue, saturation] = [hsl[0], hsl[1]];
-          document.getElementById("hue").value = Math.round(hue);
-          document.getElementById("saturation").value = saturation.toFixed(2);
-          document.getElementById("hue-value").textContent = Math.round(hue);
-          document.getElementById("saturation-value").textContent =
-            saturation.toFixed(2);
-          generatePalette();
-        } catch (error) {
-          console.error("Invalid HEX value");
-        }
-      }
+            // Palautetaan paletti objektina, jossa avaimet ja arvot
+            return Object.fromEntries(
+              palette.map((color) => [color.key, color.hsl])
+            );
+          });
 
-      function handleHexInput(event) {
-        if (event.key === "Enter") {
-          setHueAndSaturationFromHex();
-        }
-      }
+          const setHueAndSaturationFromHex = () => {
+            try {
+              const hsl = chroma(hex.value).hsl();
+              hue.value = Math.round(hsl[0]);
+              saturation.value = hsl[1];
+            } catch (error) {
+              console.error("Invalid HEX value");
+            }
+          };
 
-      window.onload = generatePalette;
+          return {
+            paletteName,
+            hue,
+            saturation,
+            lightestLightness,
+            darkestLightness,
+            hex,
+            palette,
+            cssOutput,
+            setHueAndSaturationFromHex,
+          };
+        },
+      }).mount("#app");
     </script>
   </body>
 </html>

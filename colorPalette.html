@@ -172,8 +172,8 @@
           const paletteName = ref("primary");
           const hue = ref(200);
           const saturation = ref(0.75);
-          const lightestLightness = ref(0.98);
-          const darkestLightness = ref(0.07);
+          const lightestLightness = ref(0.99);
+          const darkestLightness = ref(0.01);
           const hex = ref("#00aaff");
           const cssOutput = ref("");
 
@@ -181,23 +181,41 @@
             // Original lightness values array with keys
             const originalLightnessValues = [
               { key: 50, value: 100 },
+              { key: 75, value: 97.22 },
               { key: 100, value: 94.44 },
+              { key: 125, value: 91.67 },
               { key: 150, value: 88.89 },
+              { key: 175, value: 86.11 },
               { key: 200, value: 83.33 },
+              { key: 225, value: 80.56 },
               { key: 250, value: 77.78 },
+              { key: 275, value: 75 },
               { key: 300, value: 72.22 },
+              { key: 325, value: 69.44 },
               { key: 350, value: 66.67 },
+              { key: 375, value: 63.89 },
               { key: 400, value: 61.11 },
+              { key: 425, value: 58.33 },
               { key: 450, value: 55.56 },
+              { key: 475, value: 52.78 },
               { key: 500, value: 50 },
+              { key: 525, value: 47.22 },
               { key: 550, value: 44.44 },
+              { key: 575, value: 41.67 },
               { key: 600, value: 38.89 },
+              { key: 625, value: 36.11 },
               { key: 650, value: 33.33 },
+              { key: 675, value: 30.56 },
               { key: 700, value: 27.78 },
+              { key: 725, value: 25 },
               { key: 750, value: 22.22 },
+              { key: 775, value: 19.44 },
               { key: 800, value: 16.67 },
+              { key: 825, value: 13.89 },
               { key: 850, value: 11.11 },
+              { key: 875, value: 8.33 },
               { key: 900, value: 5.56 },
+              { key: 925, value: 2.78 },
               { key: 950, value: 0 },
             ];
 
@@ -229,9 +247,9 @@
 
               return {
                 key,
-                hsl: `${hue.value} ${(
-                  saturation.value * 100
-                ).toFixed(0)}% ${(adjustedLight * 100).toFixed(1)}%`,
+                hsl: `${hue.value} ${(saturation.value * 100).toFixed(0)}% ${(
+                  adjustedLight * 100
+                ).toFixed(1)}%`,
               };
             });
 

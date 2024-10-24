@@ -1,150 +1,297 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hypercolors</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    label {
-      display: block;
-      margin: 10px 0 5px;
-    }
-    input[type="range"], input[type="text"], textarea {
-      width: 300px;
-      margin-bottom: 10px;
-      padding: 5px;
-    }
-    .palette {
-      margin-top: 20px;
-      display: flex;
-      flex-direction: row;
-    }
-    .color-box {
-      width: 100px;
-      height: 50px;
-      display: inline-block;
-      text-align: center;
-      line-height: 50px;
-      color: #fff;
-      font-weight: bold;
-    }
-  </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.0/chroma.min.js"></script>
-</head>
-<body>
-  <h1>Hypercolors</h1>
-
-  <label for="name">Palette Name:</label>
-  <input type="text" id="name" oninput="generatePalette()">
-
-  <label for="hex">Enter HEX Color:</label>
-  <input type="text" id="hex" oninput="setHueAndSaturationFromHex()">
-
-  <label for="hue">Hue: <span id="hue-value">200</span></label>
-  <input type="range" id="hue" min="0" max="360" value="200" oninput="generatePalette()">
-
-  <label for="saturation">Saturation: <span id="saturation-value">0.75</span></label>
-  <input type="range" id="saturation" min="0" max="1" step="0.01" value="0.75" oninput="generatePalette()">
-
-  <div class="palette" id="palette"></div>
-
-  <label for="css-output">CSS Variables:</label>
-  <textarea id="css-output" rows="10"></textarea>
-
-  <script>
-    function generatePalette() {
-      const hue = parseInt(document.getElementById('hue').value);
-      const saturation = parseFloat(document.getElementById('saturation').value);
-      const paletteName = document.getElementById('name').value || 'color';
-
-      // Päivitetään näyttöön nykyiset hue- ja saturation-arvot
-      document.getElementById('hue-value').textContent = hue;
-      document.getElementById('saturation-value').textContent = saturation;
-
-      const paletteDiv = document.getElementById('palette');
-      paletteDiv.innerHTML = ''; // Tyhjennä aiempi sisältö
-
-      const cssOutput = document.getElementById('css-output');
-      let cssVarsHex = ''; // CSS Hex väreille
-      let cssVarsHsl = ''; // CSS HSL väreille
-
-      // Valoisuusasteet Tailwind-tyyliselle paletille
-      const lightnessValues = {
-        50: 0.97,
-        100: 0.94,
-        150: 0.9,
-        200: 0.84,
-        250: 0.77,
-        300: 0.72,
-        350: 0.67,
-        400: 0.62,
-        450: 0.57,
-        500: 0.49,
-        550: 0.46,
-        600: 0.41,
-        650: 0.34,
-        700: 0.28,
-        750: 0.22,
-        800: 0.18,
-        850: 0.13,
-        900: 0.1,
-        950: 0.05
-      };
-
-      // Luo väripaletin käyttäen HSL-mallia
-      Object.keys(lightnessValues).forEach(key => {
-        const lightness = lightnessValues[key];
-        const color = chroma.hsl(hue, saturation, lightness);
-        const hexColor = color.hex(); // HEX-muoto
-        const [h, s, l] = color.hsl(); // HSL arvot taulukkona
-        const hslColor = `${Math.round(h)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`; // HSL-muoto ilman "hsl()"
-
-        // Luo värilaatikot
-        const colorBox = document.createElement('div');
-        colorBox.className = 'color-box';
-        colorBox.style.backgroundColor = hexColor;
-        colorBox.title = `${key} - ${hexColor}`; // Tooltip, joka näyttää numeron ja värikoodin
-        paletteDiv.appendChild(colorBox);
-
-        // Lisää värin CSS-muuttuja
-        cssVarsHex += `--${paletteName}-${key}: ${hexColor};\n`;
-        cssVarsHsl += `--${paletteName}-${key}-hsl: ${hslColor};\n`;
-      });
-
-      // Päivitetään CSS-muuttujat textarea-kenttään
-      cssOutput.value = cssVarsHex + cssVarsHsl;
-    }
-
-    // Määritetään hue ja saturation HEX-värin perusteella
-    function setHueAndSaturationFromHex() {
-      const hex = document.getElementById('hex').value;
-
-      // Käytetään Chroma.js:tä muuntamaan HEX HSL-muotoon
-      try {
-        const hsl = chroma(hex).hsl();
-        const [hue, saturation] = [hsl[0], hsl[1]];
-
-        // Päivitetään hue- ja saturation-arvot
-        document.getElementById('hue').value = Math.round(hue);
-        document.getElementById('saturation').value = saturation.toFixed(2);
-
-        // Päivitetään arvot näkyviin
-        document.getElementById('hue-value').textContent = Math.round(hue);
-        document.getElementById('saturation-value').textContent = saturation.toFixed(2);
-
-        // Generoidaan paletti uusilla arvoilla
-        generatePalette();
-      } catch (error) {
-        console.error("Invalid HEX value");
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hypercolor</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        padding: 20px;
+        background-color: #f0f4f8;
+        color: #333;
       }
-    }
+      h1 {
+        font-size: 2rem;
+        color: #333;
+      }
+      label {
+        display: block;
+        margin: 10px 0 5px;
+        font-weight: 600;
+        color: #555;
+      }
+      input[type="range"],
+      input[type="text"],
+      textarea {
+        width: 100%;
+        max-width: 500px;
+        margin-bottom: 15px;
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+        background-color: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+      .palette {
+        margin-top: 20px;
+        display: flex;
+        gap: 2px;
+        justify-content: space-between;
+        flex-wrap: nowrap; /* Estää wrapin */
+        flex-grow: 1;
+      }
+      .color-box {
+        height: 50px;
+        flex-grow: 1; /* Laatikot skaalautuvat tilan mukaan */
+        display: inline-block;
+        text-align: center;
+        line-height: 50px;
+        color: #fff;
+        font-weight: bold;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .color-box:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+      textarea {
+        height: 600px;
+        resize: none;
+        font-family: monospace;
+        background-color: #f9fafc;
+        border: 1px solid #ddd;
+        padding: 10px;
+      }
+      .slider-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .slider-container span {
+        font-size: 0.9rem;
+        color: #666;
+      }
+      .hex-preview-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .preview-box {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        background-color: #ccc;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 0.9rem;
+        font-weight: bold;
+        transition: background-color 0.3s ease;
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.1.0/chroma.min.js"></script>
+  </head>
+  <body>
+    <h1>Hypercolor</h1>
 
-    // Generoidaan paletti sivun latautuessa
-    window.onload = generatePalette;
-  </script>
-</body>
+    <div class="slider-container">
+      <label for="name">Palette Name:</label>
+      <input type="text" id="name" oninput="generatePalette()" />
+    </div>
+
+    <div class="hex-preview-container">
+      <div class="slider-container">
+        <label for="hex">Enter HEX Color:</label>
+        <input type="text" id="hex" onkeypress="handleHexInput(event)" />
+      </div>
+      <!-- Smaller live preview next to HEX input -->
+      <div class="preview-box" id="preview-box"></div>
+    </div>
+
+    <div class="slider-container">
+      <label for="hue">Hue:</label>
+      <input
+        type="range"
+        id="hue"
+        min="0"
+        max="360"
+        value="200"
+        oninput="generatePalette()"
+      />
+      <span id="hue-value">200</span>
+    </div>
+
+    <div class="slider-container">
+      <label for="saturation">Saturation:</label>
+      <input
+        type="range"
+        id="saturation"
+        min="0"
+        max="1"
+        step="0.01"
+        value="0.75"
+        oninput="generatePalette()"
+      />
+      <span id="saturation-value">0.75</span>
+    </div>
+
+    <div class="slider-container">
+      <label for="lightness-light">Lightest Lightness:</label>
+      <input
+        type="range"
+        id="lightness-light"
+        min="0.5"
+        max="1"
+        step="0.01"
+        value="0.97"
+        oninput="generatePalette()"
+      />
+      <span id="lightness-light-value">0.97</span>
+    </div>
+
+    <div class="slider-container">
+      <label for="lightness-dark">Darkest Lightness:</label>
+      <input
+        type="range"
+        id="lightness-dark"
+        min="0"
+        max="0.5"
+        step="0.01"
+        value="0.05"
+        oninput="generatePalette()"
+      />
+      <span id="lightness-dark-value">0.05</span>
+    </div>
+
+    <div class="palette" id="palette"></div>
+
+    <label for="css-output">CSS Variables:</label>
+    <textarea id="css-output"></textarea>
+
+    <script>
+      function generatePalette() {
+        const hue = parseInt(document.getElementById("hue").value);
+        const saturation = parseFloat(
+          document.getElementById("saturation").value
+        );
+        const lightestLightness = parseFloat(
+          document.getElementById("lightness-light").value
+        );
+        const darkestLightness = parseFloat(
+          document.getElementById("lightness-dark").value
+        );
+        const paletteName = document.getElementById("name").value || "color";
+
+        // Päivitetään näyttöön nykyiset arvot prosentteina
+        document.getElementById("hue-value").textContent = `${hue}%`;
+        document.getElementById("saturation-value").textContent = `${Math.round(
+          saturation * 100
+        )}%`;
+        document.getElementById(
+          "lightness-light-value"
+        ).textContent = `${Math.round(lightestLightness * 100)}%`;
+        document.getElementById(
+          "lightness-dark-value"
+        ).textContent = `${Math.round(darkestLightness * 100)}%`;
+
+        const paletteDiv = document.getElementById("palette");
+        paletteDiv.innerHTML = ""; // Tyhjennä aiempi sisältö
+
+        // Päivitä esikatselu ja HEX-kenttä, mutta älä muuta sen arvoa
+        const previewBox = document.getElementById("preview-box");
+        const previewColor = chroma
+          .hsl(hue, saturation, (lightestLightness + darkestLightness) / 2)
+          .hex();
+        previewBox.style.backgroundColor = previewColor;
+
+        const cssOutput = document.getElementById("css-output");
+        let cssVarsHsl = ""; // CSS HSL väreille
+
+        // Kiinteät lightness-arvot, jotka skaalataan valittujen arvojen mukaan
+        const originalLightnessValues = {
+          50: 0.97,
+          100: 0.94,
+          150: 0.9,
+          200: 0.84,
+          250: 0.77,
+          300: 0.72,
+          350: 0.67,
+          400: 0.62,
+          450: 0.57,
+          500: 0.52,
+          550: 0.46,
+          600: 0.41,
+          650: 0.34,
+          700: 0.28,
+          750: 0.22,
+          800: 0.14,
+          850: 0.11,
+          900: 0.08,
+          950: 0.05,
+        };
+
+        // Skaalaus lightness-arvoille
+        const scaleFactor =
+          (lightestLightness - darkestLightness) / (0.97 - 0.05);
+        const scaledLightnessValues = {};
+        Object.keys(originalLightnessValues).forEach((key) => {
+          scaledLightnessValues[key] =
+            darkestLightness +
+            (originalLightnessValues[key] - 0.05) * scaleFactor;
+        });
+
+        // Luo väripaletin käyttäen HSL-mallia
+        Object.keys(scaledLightnessValues).forEach((key) => {
+          const lightness = scaledLightnessValues[key];
+          const color = chroma.hsl(hue, saturation, lightness);
+          const hexColor = color.hex();
+          const [h, s, l] = color.hsl();
+          const hslColor = `${Math.round(h) || 0} ${Math.round(
+            s * 100
+          )}% ${Math.round(l * 100)}%`;
+
+          // Luo värilaatikot
+          const colorBox = document.createElement("div");
+          colorBox.className = "color-box";
+          colorBox.style.backgroundColor = hexColor;
+          colorBox.title = `${key} - ${hexColor}`; // Tooltip näyttää numeron ja värikoodin
+          paletteDiv.appendChild(colorBox);
+
+          // Lisää värin CSS-muuttuja
+          cssVarsHsl += `--${paletteName}-${key}: ${hslColor};\n`;
+        });
+
+        // Päivitetään CSS-muuttujat textarea-kenttään
+        cssOutput.value = cssVarsHsl;
+      }
+
+      // Määritetään hue ja saturation HEX-värin perusteella, mutta HEX-arvo säilyy muuttumattomana
+      function setHueAndSaturationFromHex() {
+        const hex = document.getElementById("hex").value;
+        try {
+          const hsl = chroma(hex).hsl();
+          const [hue, saturation] = [hsl[0], hsl[1]];
+          document.getElementById("hue").value = Math.round(hue);
+          document.getElementById("saturation").value = saturation.toFixed(2);
+          document.getElementById("hue-value").textContent = Math.round(hue);
+          document.getElementById("saturation-value").textContent =
+            saturation.toFixed(2);
+          generatePalette();
+        } catch (error) {
+          console.error("Invalid HEX value");
+        }
+      }
+
+      function handleHexInput(event) {
+        if (event.key === "Enter") {
+          setHueAndSaturationFromHex();
+        }
+      }
+
+      window.onload = generatePalette;
+    </script>
+  </body>
 </html>
